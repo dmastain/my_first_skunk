@@ -34,7 +34,7 @@ public class SkunkController
 
 	public boolean run()
 	{
-		ui.println("Welcome to Skunk 0.47\n");
+		ui.println("Welcome to Skunk 0.48\n");
 
 		String numberPlayersString = skunkUI.promptReadAndReturn("How many players?");
 		this.numberOfPlayers = Integer.parseInt(numberPlayersString);
@@ -56,70 +56,14 @@ public class SkunkController
 			ui.println("Next player is " + playerNames[activePlayerIndex] + ".");
 			activePlayer.setTurnScore(0);
 			
-			boolean wantsToRoll = getRollChoice(); 
+			rolling();
+
+			endTurn();
 			
-			while (wantsToRoll)
-			{
-				activePlayer.setRollScore(0);
-				skunkDice.roll();
-				if (isDoubleSkunk())
-				{
-					ui.println("Two Skunks! You lose the turn, zeroing out both turn and game scores and paying 4 chips to the kitty");
-					kitty += 4;
-					activePlayer.scoreSkunkRoll(4);
-					activePlayer.setGameScore(0);
-					wantsToRoll = false;
-					break;
-				}
-				else if (isSkunkDeuce())
-				{
-					ui.println(
-							"Skunks and Deuce! You lose the turn, zeroing out the turn score and paying 2 chips to the kitty");
-					kitty += 2;
-					activePlayer.scoreSkunkRoll(2);
-					wantsToRoll = false;
-					break;
-				}
-				else if (isRegularSkunk())
-				{
-					ui.println("One Skunk! You lose the turn, zeroing out the turn score and paying 1 chip to the kitty");
-					kitty += 1;
-					activePlayer.scoreSkunkRoll(1);
-					wantsToRoll = false;
-					break;
-
-				}
-
-				activePlayer.setRollScore(skunkDice.getLastRoll());
-				activePlayer.setTurnScore(activePlayer.getTurnScore() + skunkDice.getLastRoll());
-				ui.println(
-						"Roll of " + skunkDice.toString() + ", gives new turn score of " + activePlayer.getTurnScore());
-
-				wantsToRoll = getRollChoice();
-
-			}
-
-			ui.println("End of turn for " + playerNames[activePlayerIndex]);
-			ui.println("Score for this turn is " + activePlayer.getTurnScore() + ", added to...");
-			ui.println("Previous game score of " + activePlayer.getGameScore());
-			activePlayer.setGameScore(activePlayer.getGameScore() + activePlayer.getTurnScore());
-			ui.println("Gives new game score of " + activePlayer.getGameScore());
-
-			ui.println("");
 			if (activePlayer.getGameScore() >= 100)
 				gameNotOver = false;
 
-			ui.println("Scoreboard: ");
-			ui.println("Kitty has " + kitty + " chips.");
-			ui.println("Player name -- Turn score -- Game score -- Total chips");
-			ui.println("-----------------------");
-
-			for (int i = 0; i < numberOfPlayers; i++)
-			{
-				ui.println(playerNames[i] + " -- " + players.get(i).getTurnScore() + " -- " + players.get(i).getGameScore()
-						+ " -- " + players.get(i).getNumberChips());
-			}
-			ui.println("-----------------------");
+			printScoreboard();
 
 			ui.println("Turn passes to right...");
 
@@ -136,60 +80,7 @@ public class SkunkController
 			ui.println("Last turn for player " + playerNames[activePlayerIndex] + "...");
 			activePlayer.setTurnScore(0);
 
-			boolean wantsToRoll = getRollChoice();
-
-			while (wantsToRoll)
-			{
-				skunkDice.roll();
-				ui.println("Roll is " + skunkDice.toString() + "\n");
-
-				if (isDoubleSkunk())
-				{
-					ui.println("Two Skunks! You lose the turn, zeroing out both turn and game scores and paying 4 chips to the kitty");
-					kitty += 4;
-					activePlayer.scoreSkunkRoll(4);
-					activePlayer.setGameScore(0);
-					wantsToRoll = false;
-					break;
-				}
-				else if (isSkunkDeuce())
-				{
-					ui.println(
-							"Skunks and Deuce! You lose the turn, zeroing out the turn score and paying 2 chips to the kitty");
-					kitty += 2;
-					activePlayer.scoreSkunkRoll(2);
-					wantsToRoll = false;
-
-				}
-				else if (isRegularSkunk())
-				{
-					ui.println("One Skunk!  You lose the turn, zeroing out the turn score and paying 1 chip to the kitty");
-					kitty += 1;
-					activePlayer.scoreSkunkRoll(1);
-					wantsToRoll = false;
-				}
-				else
-				{
-					activePlayer.setTurnScore(activePlayer.getRollScore() + skunkDice.getLastRoll());
-					ui.println("Roll of " + skunkDice.toString() + ", giving new turn score of "
-							+ activePlayer.getTurnScore());
-
-					ui.println("Scoreboard: ");
-					ui.println("Kitty has " + kitty);
-					ui.println("Player name -- Turn score -- Game score -- Total chips");
-					ui.println("-----------------------");
-
-					for (int pNumber = 0; pNumber < numberOfPlayers; pNumber++)
-					{
-						ui.println(playerNames[pNumber] + " -- " + players.get(pNumber).turnScore + " -- "
-								+ players.get(pNumber).getGameScore() + " -- " + players.get(pNumber).getNumberChips());
-					}
-					ui.println("-----------------------");
-
-					wantsToRoll = getRollChoice();
-				}
-
-			}
+			rolling();
 
 			activePlayer.setTurnScore(activePlayer.getRollScore() + skunkDice.getLastRoll());
 			ui.println("Final roll of " + skunkDice.toString() + ", giving final game score of "
@@ -197,6 +88,56 @@ public class SkunkController
 
 		}
 
+		determineWinner();
+
+		printScoreboard();
+		return true;
+	}
+
+	private void rolling() {
+		boolean wantsToRoll = getRollChoice(); 
+		
+		while (wantsToRoll)
+		{
+			activePlayer.setRollScore(0);
+			skunkDice.roll();
+			if (isDoubleSkunk())
+			{
+				ui.println("Two Skunks! You lose the turn, zeroing out both turn and game scores and paying 4 chips to the kitty");
+				kitty += 4;
+				activePlayer.scoreSkunkRoll(4);
+				activePlayer.setGameScore(0);
+				wantsToRoll = false;
+				break;
+			}
+			else if (isSkunkDeuce())
+			{
+				ui.println(
+						"Skunks and Deuce! You lose the turn, zeroing out the turn score and paying 2 chips to the kitty");
+				kitty += 2;
+				activePlayer.scoreSkunkRoll(2);
+				wantsToRoll = false;
+				break;
+			}
+			else if (isRegularSkunk())
+			{
+				ui.println("One Skunk! You lose the turn, zeroing out the turn score and paying 1 chip to the kitty");
+				kitty += 1;
+				activePlayer.scoreSkunkRoll(1);
+				wantsToRoll = false;
+				break;
+			}
+
+			activePlayer.setRollScore(skunkDice.getLastRoll());
+			activePlayer.setTurnScore(activePlayer.getTurnScore() + skunkDice.getLastRoll());
+			ui.println("Roll of " + skunkDice.toString() + ", gives new turn score of " + activePlayer.getTurnScore());
+
+			wantsToRoll = getRollChoice();
+
+		}
+	}
+
+	private void determineWinner() {
 		int winner = 0;
 		int winnerScore = 0;
 
@@ -215,19 +156,29 @@ public class SkunkController
 				"Game winner is " + playerNames[winner] + " with score of " + players.get(winner).getGameScore());
 		players.get(winner).setNumberChips(players.get(winner).getNumberChips() + kitty);
 		ui.println("Game winner earns " + kitty + " chips , finishing with " + players.get(winner).getNumberChips());
+	}
 
-		ui.println("\nFinal scoreboard for this game:");
-		ui.println("Player name -- Game score -- Total chips");
+	private void printScoreboard() {
+		ui.println("Scoreboard: ");
+		ui.println("Kitty has " + kitty + " chips.");
+		ui.println("Player name -- Turn score -- Game score -- Total chips");
 		ui.println("-----------------------");
 
-		for (int pNumber = 0; pNumber < numberOfPlayers; pNumber++)
+		for (int i = 0; i < numberOfPlayers; i++)
 		{
-			ui.println(playerNames[pNumber] + " -- " + players.get(pNumber).getGameScore() + " -- "
-					+ players.get(pNumber).getNumberChips());
+			ui.println(playerNames[i] + " -- " + players.get(i).getTurnScore() + " -- " + players.get(i).getGameScore()
+					+ " -- " + players.get(i).getNumberChips());
 		}
-
 		ui.println("-----------------------");
-		return true;
+	}
+
+	private void endTurn() {
+		ui.println("End of turn for " + playerNames[activePlayerIndex]);
+		ui.println("Score for this turn is " + activePlayer.getTurnScore() + ", added to...");
+		ui.println("Previous game score of " + activePlayer.getGameScore());
+		activePlayer.setGameScore(activePlayer.getGameScore() + activePlayer.getTurnScore());
+		ui.println("Gives new game score of " + activePlayer.getGameScore());
+		ui.println("");
 	}
 
 	private boolean isDoubleSkunk() 
