@@ -56,9 +56,7 @@ public class SkunkController
 			ui.println("Next player is " + playerNames[activePlayerIndex] + ".");
 			activePlayer.setTurnScore(0);
 			
-			rolling();
-
-			endTurn();
+			rollingTurn();
 			
 			if (activePlayer.getGameScore() >= 100)
 				gameNotOver = false;
@@ -80,11 +78,10 @@ public class SkunkController
 			ui.println("Last turn for player " + playerNames[activePlayerIndex] + "...");
 			activePlayer.setTurnScore(0);
 
-			rolling();
+			rollingTurn();
 
 			activePlayer.setTurnScore(activePlayer.getRollScore() + skunkDice.getLastRoll());
-			ui.println("Final roll of " + skunkDice.toString() + ", giving final game score of "
-					+ activePlayer.getRollScore());
+			ui.println("Final roll of " + skunkDice.toString() + ", giving final game score of " + activePlayer.getGameScore());
 
 		}
 
@@ -94,7 +91,7 @@ public class SkunkController
 		return true;
 	}
 
-	private void rolling() {
+	private void rollingTurn() {
 		boolean wantsToRoll = getRollChoice(); 
 		
 		while (wantsToRoll)
@@ -133,8 +130,8 @@ public class SkunkController
 			ui.println("Roll of " + skunkDice.toString() + ", gives new turn score of " + activePlayer.getTurnScore());
 
 			wantsToRoll = getRollChoice();
-
 		}
+		endTurn();
 	}
 
 	private void determineWinner() {
